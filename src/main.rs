@@ -1,10 +1,12 @@
 use std::env;
 use std::fs::OpenOptions;
 use std::io::{self, ErrorKind, Read, Write};
+use std::os::unix::fs::OpenOptionsExt;
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
 const DEFAULT_DEV: &str = "/dev/hidraw1";
+const O_NONBLOCK: i32 = 0o4000;
 const ROWS: usize = 5;
 const COLS: usize = 12;
 const LAYERS: usize = 4;
@@ -486,7 +488,11 @@ fn key_name(code: u16) -> String {
 }
 
 fn open_device(path: &str) -> io::Result<std::fs::File> {
-    OpenOptions::new().read(true).write(true).open(path)
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .custom_flags(O_NONBLOCK)
+        .open(path)
 }
 
 fn drain(file: &mut std::fs::File) -> io::Result<()> {
